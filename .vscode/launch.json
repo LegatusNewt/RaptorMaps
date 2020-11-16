@@ -23,7 +23,7 @@
         "type": "node",
         "request": "launch",
         "name": "Launch Server",
-        "program": "${workspaceFolder}/server/bin/www",
+        "program": "${workspaceFolder}/server/app.js",
         "skipFiles": [
             "<node_internals>/**"
         ]

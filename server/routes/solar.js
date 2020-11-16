@@ -5,22 +5,32 @@ const DATA = 'api_techician_response_data.json';
 
 let dataIndex = 0;
 
-/* GET say Hello */
+/*Routes*/
+
+//GET say Hello
 router.get('/', function(req, res, next) {
   return res.status(200).send( { message: "Hello World" } );
 });
 
-router.get('/from_file', fromFile);
-router.get('/:id/technicians', fromFile);
-async function fromFile(req, res, next) {
-    let data = await fs.readFile(`${appRoot}/data/${DATA}`);
-    let jsonData = JSON.parse(data);
 
-    if(jsonData[dataIndex] == undefined){
-        dataIndex = 0;
-    }
-    console.log(dataIndex);
-    return res.status(200).send(jsonData[dataIndex++]);
+//GET technicians
+router.get('/from_file', getTechnicians);
+router.get('/:id/technicians', getTechnicians);
+async function getTechnicians(req, res, next) {  
+  let data = await fromFile();
+  return res.status(200).send(data);
 }
 
-module.exports = router;
+/*Logic*/
+async function fromFile() {
+  let data = await fs.readFile(`${appRoot}/data/${DATA}`);
+  let jsonData = JSON.parse(data);
+
+  if(jsonData[dataIndex] == undefined){
+      dataIndex = 0;
+  }
+  console.log(dataIndex);
+  return jsonData[dataIndex++];
+}
+
+module.exports = { router,  fromFile };
