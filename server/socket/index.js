@@ -21,6 +21,7 @@ module.exports = function(server){
     //Emit technician data on a loop        
     setInterval(async() => {
         let data = await fromFile();
+        console.log(JSON.stringify(data));
         io.emit('tech', data);
     }, 5000);
     
