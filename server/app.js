@@ -56,7 +56,7 @@ app.use(function(err, req, res, next) {
  * Get port from environment and store in Express.
  */
 
-let port = 3000;
+let port = 8000;
 app.set('port', port);
 
 /**

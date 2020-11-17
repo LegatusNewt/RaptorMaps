@@ -1,40 +1,72 @@
-import React, { useRef, useEffect, useState} from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import socketIOClient from 'socket.io-client';
 import './Map.css';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2xhbWFyY2EiLCJhIjoiY2p5a3plOTY0MDMydDNpbzNsMDQ3ZWV2cyJ9.EA8hlPf4fj0wLkT0J0ozkA';
 
-const Map = () => {
-    let exJSON = JSON.parse('{ "type": "FeatureCollection", "features": [ { "type": "Feature", "properties": { "id": 0, "name": "Tech 3", "tsecs": 1592078400, "bearing": 0 }, "geometry": { "type": "Point", "coordinates": [ -115.60639190059982, 32.67369394339296 ] } }, { "type": "Feature", "properties": { "id": 0, "name": "Tech 1", "bearing": 87, "tsecs": 1592078400 }, "geometry": { "type": "Point", "coordinates": [ -115.58590807376797, 32.67908364196443 ] } }, { "type": "Feature", "properties": { "id": 0, "name": "Tech 2", "bearing": 270, "tsecs": 1592078400 }, "geometry": { "type": "Point", "coordinates": [ -115.59087670213857, 32.67656712829319 ] } } ] }');
+const Map = ({ data }) => {
     const mapContainer = useRef();
-    const [geojson, setGeoJson] = useState(exJSON);    
+    const [geoJSON, setGeoJSON] = useState(data);    
+    const [mapState, setMap] = useState(null);
+    const [loaded, isLoaded] = useState(false);
 
-    useEffect(() => {
+    //Load mapboxgl after "component" mounted
+    useEffect(() => {     
+        //Set center to be one of the points
+        let center = [geoJSON.features[0].geometry.coordinates[0], geoJSON.features[0].geometry.coordinates[1]];
         const map = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: "mapbox://styles/mapbox/streets-v11", // stylesheet location
-          center: [0, 0],
-          zoom: 5
+            container: mapContainer.current,
+            style: "mapbox://styles/mapbox/satellite-v9", // stylesheet location
+            center: center,
+            zoom: 15
         });
 
         map.on('load', () => {
-            map.addSource('points', {            
-                type : 'geojson',
-                data : geojson
-            });
-
-            map.addLayer({
-                'id': 'technicians',
-                'type': 'circle',
-                'source': 'points'
+            map.loadImage('./man2x_18dp.png', function (error, image) {
+                if (error) throw error;
+                map.addImage('man', image, {
+                    sdf: "true"
+                });
+                map.addLayer({
+                    'id': 'technicians',
+                    'type': 'symbol',
+                    'source': {
+                        'type': 'geojson',
+                        'data': geoJSON
+                    },
+                    'layout': {
+                        'text-field': ['get', 'name'],
+                        'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+                        'text-radial-offset': 1,
+                        'text-justify': 'auto',
+                        'icon-image': 'man'
+                    },
+                    'paint' : {
+                        "icon-color": "#FFFFFF",
+                        "text-color": "#FFFFFF"
+                    }
+                });
+                //Helps to alleviate race condition that data is updated before Map loaded
+                setMap(map);               
             });
         });
-
         // Clean up on unmount
-        return () => map.remove();   
-    }, []);    
+        return () => map.remove();
+    }, []);
 
+    //Update Mapbox layer when data changes (on socket message)
+    useEffect(() => {
+        setGeoJSON(data);
+        //Call Mapbox function to add data to source of layer
+        console.log('Locations updated', data);
+        if(mapState && mapState.isStyleLoaded()){
+            mapState.getSource('technicians').setData(geoJSON);
+        } else{
+            console.log('Not Loaded');
+        }        
+    }, [data]);
+
+    //return Map container as component
     return (
         <div>
             <div ref={mapContainer} className="map-container" />
