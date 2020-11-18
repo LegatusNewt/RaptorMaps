@@ -15,6 +15,7 @@ function App() {
     const [geoJSON, setGeoJSON] = useState(exJSON);
     const [notify, setNotify] = useState({message: "Proximity Alert", distance: 0, technicians: []});
     const [open, setOpen] = useState(false);
+    let timer = null;
 
     //Setup the socketIOClient on mounted
     useEffect(() => {
@@ -27,8 +28,13 @@ function App() {
             setGeoJSON(newGeoJSON);  
         });
         socket.on("notify", data => {
+            clearTimeout(timer);
             setNotify(data);
             setOpen(true);
+            let newTimer = setTimeout(function() {
+                setOpen(false);
+            }, 5000);
+            timer = newTimer;
         });
     }, []);
 
