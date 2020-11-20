@@ -6,6 +6,7 @@ import Collpase from '@material-ui/core/Collapse';
 import appStyle from './App.css'; 
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+import { server_url } from './config.js';
 
 function App() {
     //Starting data
@@ -20,7 +21,7 @@ function App() {
     //Setup the socketIOClient on mounted
     useEffect(() => {
         //Connect to LAN address/port running the backend
-        const socket = socketIOClient('http://justinian.local:8000', {
+        const socket = socketIOClient(server_url, {
             path: '/realtime'
         });
         socket.on("tech", data => {
